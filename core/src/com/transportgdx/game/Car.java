@@ -15,11 +15,13 @@ public class Car extends Actor {
     private Body body;
     private TextureRegion sprite;
     private float wheelRotate = 0;   //0 - колесо смотрит прямо. Угол между прямой колеса и прямой корпуса машины
-    public static final float MAX_ROTATE = (float)(60 * Math.PI / 180);
+    public static final float MAX_ROTATE = (float)(75 * Math.PI / 180);
     public static final float PI2 = (float)Math.PI * 2;
-    public static final float FORCE = 5000f;
+    public static final float FORCE = 2000f;
     private boolean isGas = false;
+    private boolean isTormos = false;
     public static final float FRONT_SIZE = GameScreen.CAR_WIDTH / 2;
+    private int drivingSpeed = 0;   //0 - нейтральная, -1 - назад, >0 - вперед
 
     public void setBodyData(Body body) {
         this.body = body;
@@ -53,9 +55,12 @@ public class Car extends Actor {
 
     public float getWheelRotate() { return wheelRotate; }
 
+    public float getSpeed() { return body.getLinearVelocity().len(); }
+
     @Override
     public void act(float delta) {
         if(isGas) {
+            float force = drivingSpeed * FORCE;
             float angle = body.getAngle();
             float sin = (float) Math.sin(angle);
             float cos = (float) Math.cos(angle);
@@ -66,10 +71,17 @@ public class Car extends Actor {
 //                    true);    //Сила тяги
             float frontX = cos * FRONT_SIZE;
             float frontY = sin * FRONT_SIZE;
-            body.applyForce(FORCE * cos, FORCE * sin, pos.x - frontX, pos.y - frontY, true);
+            body.applyForce(force * cos, force * sin, pos.x - frontX, pos.y - frontY, true);
             float sinWheel = (float) Math.sin(angle + wheelRotate);
             float cosWheel = (float) Math.cos(angle + wheelRotate);
-            body.applyForce(FORCE * cosWheel, FORCE * sinWheel, pos.x + frontX, pos.y + frontY, true);
+            body.applyForce(force * cosWheel / 2, force * sinWheel / 2, pos.x + frontX, pos.y + frontY, true);
+        }
+        if(isTormos) {
+            body.setLinearDamping(5f);
+            body.setAngularDamping(5f);
+        } else {
+            body.setLinearDamping(1f);
+            body.setAngularDamping(1f);
         }
     }
 
@@ -96,9 +108,21 @@ public class Car extends Actor {
         //if(angle < -MAX_ROTATE || angle > MAX_ROTATE) return;
         wheelRotate = angle;
     }
+    public void setDrivingSpeed(int drivingSpeed) {
+        if(drivingSpeed <= 0) return;
+        if(drivingSpeed - this.drivingSpeed > 1 && this.drivingSpeed != -1) return;   //Нельзя переключаться сразу на несколько скоростей вперед
+        this.drivingSpeed = drivingSpeed;
+    }
+    public void setNeutralSpeed() {
+        this.drivingSpeed = 0;
+    }
+    public void setR() {
+        this.drivingSpeed = -1;
+    }
     public void takeOutGas() {
         isGas = false;
     }
+    public void takeOutTormos() { isTormos = false; }
     public void gas() {
         isGas = true;
 
@@ -115,7 +139,7 @@ public class Car extends Actor {
         //body.applyForce(new Vector2(-2000,2000), new Vector2(100,0), true);
 
     }
-    public void brake(float force) {
-
+    public void tormos() {
+        isTormos = true;
     }
 }

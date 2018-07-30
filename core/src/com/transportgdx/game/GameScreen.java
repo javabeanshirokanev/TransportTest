@@ -55,8 +55,8 @@ public class GameScreen implements Screen, InputProcessor {
 
     public GameScreen() {
         batch = new SpriteBatch();
-        img = new Texture("C:\\TransportTest\\assets\\car.png");
-        map = new TmxMapLoader().load("C:\\TransportTest\\assets\\test2.tmx");
+        img = new Texture("C:\\TransportTestRemote\\TransportTest\\assets\\car.png");
+        map = new TmxMapLoader().load("C:\\TransportTestRemote\\TransportTest\\assets\\test2.tmx");
         font = new BitmapFont();
         renderer = new OrthogonalTiledMapRenderer(map, unitScale);
         //camera.setToOrtho(false, 1f, 1f);
@@ -74,7 +74,9 @@ public class GameScreen implements Screen, InputProcessor {
         TextureRegion[][] regSplitResult = TextureRegion.split(img, 640, 360);
         carRegion = regSplitResult[0][0];
         myCar = createCar(150, 80, 0);
+        myCar.setDrivingSpeed(1);
         createCar(150, 20, 1.2f);
+        createCar(250, 50, 2.2f);
         //body.applyForce(new Vector2(3,0), new Vector2(0,0), true);
         //body.applyLinearImpulse(new Vector2(6,0), new Vector2(0,0), false);
         Gdx.input.setInputProcessor(this);
@@ -90,7 +92,7 @@ public class GameScreen implements Screen, InputProcessor {
 
     @Override
     public void render(float delta) {
-        Gdx.gl.glClearColor(1, 0, 0, 1);
+        Gdx.gl.glClearColor(0, 0, 0, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
         Vector2 v = myCar.getPosition();
@@ -115,6 +117,7 @@ public class GameScreen implements Screen, InputProcessor {
         font.draw(batch, "x: " + tp.x, 10, 280);
         font.draw(batch, "y: " + tp.y, 10, 260);
         font.draw(batch, "wheel: " + myCar.getWheelRotate(), 10, 240);
+        font.draw(batch, "velocity: " + myCar.getSpeed(), 10, 220);
         batch.end();
 
         camera.unproject(tp.set(Gdx.input.getX(), Gdx.input.getY(), 0));
@@ -131,6 +134,7 @@ public class GameScreen implements Screen, InputProcessor {
         PolygonShape poly = new PolygonShape();
         poly.setAsBox(CAR_WIDTH, CAR_HEIGHT);
         body.createFixture(poly, density);
+        body.setFixedRotation(false);
         body.setUserData(car);
         stage.addActor(car);
         body.setTransform(x, y, angle);
@@ -167,13 +171,34 @@ public class GameScreen implements Screen, InputProcessor {
     @Override
     public boolean keyDown(int keycode) {
         if(keycode == Input.Keys.ESCAPE) {
-            //Выход
+            Gdx.app.exit();
+        }
+        if(keycode == Input.Keys.NUM_1) {
+            myCar.setDrivingSpeed(1);
+        }
+        if(keycode == Input.Keys.NUM_2) {
+            myCar.setDrivingSpeed(2);
+        }
+        if(keycode == Input.Keys.NUM_3) {
+            myCar.setDrivingSpeed(3);
+        }
+        if(keycode == Input.Keys.NUM_4) {
+            myCar.setDrivingSpeed(4);
+        }
+        if(keycode == Input.Keys.R) {
+            myCar.setR();
+        }
+        if(keycode == Input.Keys.SPACE) {
+            myCar.tormos();
         }
         return false;
     }
 
     @Override
     public boolean keyUp(int keycode) {
+        if(keycode == Input.Keys.SPACE) {
+            myCar.takeOutTormos();
+        }
         return false;
     }
 
@@ -188,26 +213,30 @@ public class GameScreen implements Screen, InputProcessor {
 
     @Override
     public boolean touchDown(int screenX, int screenY, int pointer, int button) {
-        camera.unproject(tp.set(screenX, screenY, 0));
-        float x = tp.x;
-        float y = tp.y;
-        myCar.gas();
-        //myCar.rotateTo(x, y);
+        if(button == Input.Buttons.RIGHT) {
+            camera.unproject(tp.set(screenX, screenY, 0));
+            float x = tp.x;
+            float y = tp.y;
+            myCar.gas();
+            //myCar.rotateTo(x, y);
+        }
         return true;
     }
 
     @Override
     public boolean touchUp(int screenX, int screenY, int pointer, int button) {
-        //Gdx.input.isTouched();
-        myCar.takeOutGas();
+        if(button == Input.Buttons.RIGHT) {
+            //Gdx.input.isTouched();
+            myCar.takeOutGas();
+        }
         return false;
     }
 
     @Override
     public boolean touchDragged(int screenX, int screenY, int pointer) {
-        camera.unproject(tp.set(screenX, screenY, 0));
-        float x = tp.x;
-        float y = tp.y;
+        //camera.unproject(tp.set(screenX, screenY, 0));
+        //float x = tp.x;
+        //float y = tp.y;
         //myCar.rotateTo(x, y);
         return false;
     }
