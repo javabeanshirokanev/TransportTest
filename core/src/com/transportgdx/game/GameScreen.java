@@ -10,9 +10,15 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.maps.MapLayer;
+import com.badlogic.gdx.maps.MapLayers;
+import com.badlogic.gdx.maps.MapObject;
+import com.badlogic.gdx.maps.MapObjects;
+import com.badlogic.gdx.maps.objects.RectangleMapObject;
 import com.badlogic.gdx.maps.tiled.TiledMap;
 import com.badlogic.gdx.maps.tiled.TmxMapLoader;
 import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
+import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.physics.box2d.*;
@@ -56,7 +62,8 @@ public class GameScreen implements Screen, InputProcessor {
     public GameScreen() {
         batch = new SpriteBatch();
         img = new Texture("C:\\TransportTestRemote\\TransportTest\\assets\\car.png");
-        map = new TmxMapLoader().load("C:\\TransportTestRemote\\TransportTest\\assets\\test2.tmx");
+        map = new TmxMapLoader().load("C:\\TransportTestRemote\\TransportTest\\assets\\test.tmx");
+
         font = new BitmapFont();
         renderer = new OrthogonalTiledMapRenderer(map, unitScale);
         //camera.setToOrtho(false, 1f, 1f);
@@ -64,6 +71,20 @@ public class GameScreen implements Screen, InputProcessor {
         box2drenderer = new Box2DDebugRenderer();
         gameViewport.setCamera(camera);
         stage = new Stage(gameViewport);
+
+        MapLayers layers = map.getLayers();
+        MapLayer layer = layers.get("collisions");
+        MapObjects objects = layer.getObjects();
+        for(MapObject object : objects) {
+            if(object instanceof RectangleMapObject) {
+                RectangleMapObject recto = (RectangleMapObject)object;
+                Rectangle rect = recto.getRectangle();
+                float w = rect.width;
+                float h = rect.height;
+                addWall(unitScale * (rect.x + w / 2), unitScale * (rect.y + h / 2),
+                        unitScale * w / 2, unitScale * h / 2);
+            }
+        }
 
         camera.setToOrtho(false, 200f, 100f);
         //camera.far = 1000;
@@ -138,6 +159,20 @@ public class GameScreen implements Screen, InputProcessor {
         body.setUserData(car);
         stage.addActor(car);
         body.setTransform(x, y, angle);
+        poly.dispose();
+        return body;
+    }
+    private Body addWall(float x, float y, float width, float height) {
+        BodyDef def = new BodyDef();
+        def.type = BodyDef.BodyType.StaticBody;
+        //def.position.x = x;
+        //def.position.y = y;
+        Body body = world.createBody(def);
+        PolygonShape poly = new PolygonShape();
+        poly.setAsBox(width, height);
+        body.createFixture(poly, 100f);
+        body.setFixedRotation(true);
+        body.setTransform(x, y, 0f);
         poly.dispose();
         return body;
     }
