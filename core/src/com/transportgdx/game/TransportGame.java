@@ -16,12 +16,12 @@ import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 
 public class TransportGame extends Game {
-	GameScreen screen;
+	//GameScreen screen;
 
 	@Override
 	public void create () {
-		screen = new GameScreen();
-		this.setScreen(screen);
+		//screen = new GameScreen();
+		this.setScreen(new MenuScreen(this));
 	}
 
 	@Override
@@ -32,6 +32,6 @@ public class TransportGame extends Game {
 	@Override
 	public void dispose () {
 		super.dispose();
-		screen.dispose();
+		//screen.dispose();
 	}
 }

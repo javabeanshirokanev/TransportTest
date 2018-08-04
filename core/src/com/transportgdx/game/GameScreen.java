@@ -53,6 +53,12 @@ public class GameScreen implements Screen, InputProcessor {
     public static final float CAR_WIDTH = 10;
     public static final float CAR_HEIGHT = 4;
 
+    private TransportGame game;
+
+    public GameScreen(TransportGame game) {
+        this();
+        this.game = game;
+    }
 
     @Override
     public void show() {
@@ -61,8 +67,8 @@ public class GameScreen implements Screen, InputProcessor {
 
     public GameScreen() {
         batch = new SpriteBatch();
-        img = new Texture("C:\\TransportTestRemote\\TransportTest\\assets\\car.png");
-        map = new TmxMapLoader().load("C:\\TransportTestRemote\\TransportTest\\assets\\test.tmx");
+        img = new Texture("assets\\car.png");
+        map = new TmxMapLoader().load("assets\\test.tmx");
 
         font = new BitmapFont();
         renderer = new OrthogonalTiledMapRenderer(map, unitScale);
@@ -94,7 +100,7 @@ public class GameScreen implements Screen, InputProcessor {
 
         TextureRegion[][] regSplitResult = TextureRegion.split(img, 640, 360);
         carRegion = regSplitResult[0][0];
-        myCar = createCar(150, 80, 0);
+        myCar = createCar(150, 80, 0.1f);
         myCar.setDrivingSpeed(1);
         createCar(150, 20, 1.2f);
         createCar(250, 50, 2.2f);
@@ -108,6 +114,9 @@ public class GameScreen implements Screen, InputProcessor {
         Car car = new Car(carRegion);
         Body body = addCar(x, y, angle, 1f, car);
         car.setBodyData(body);
+        //MassData massData = new MassData();
+        //massData.mass = 100f;
+        //body.setMassData(massData);
         return car;
     }
 
@@ -131,7 +140,7 @@ public class GameScreen implements Screen, InputProcessor {
         stage.draw();
 
         stage.act(delta);
-        world.step(delta, 4, 4);
+        world.step(delta, 2, 2);
 
         batch.begin();
         font.draw(batch, "angle: " + 180 * myCar.getAngle() / Math.PI, 10, 300);
@@ -179,7 +188,7 @@ public class GameScreen implements Screen, InputProcessor {
 
     @Override
     public void resize(int width, int height) {
-
+        //gameViewport.update(width, height);
     }
 
     @Override
@@ -206,7 +215,7 @@ public class GameScreen implements Screen, InputProcessor {
     @Override
     public boolean keyDown(int keycode) {
         if(keycode == Input.Keys.ESCAPE) {
-            Gdx.app.exit();
+            game.setScreen(new MenuScreen(game));
         }
         if(keycode == Input.Keys.NUM_1) {
             myCar.setDrivingSpeed(1);

@@ -22,6 +22,11 @@ public class Car extends Actor {
     private boolean isTormos = false;
     public static final float FRONT_SIZE = GameScreen.CAR_WIDTH / 2;
     private int drivingSpeed = 0;   //0 - нейтральная, -1 - назад, >0 - вперед
+    private final Vector2 generalForce = new Vector2();
+    private final Vector2 u = new Vector2();
+
+    private static final float C_DRAG = 0.4257f;
+    private static final float C_RR = 12.8f;
 
     public void setBodyData(Body body) {
         this.body = body;
@@ -37,9 +42,9 @@ public class Car extends Actor {
         Vector2 v = body.getPosition();
         //float angle = (float)Math.atan2(y - v.y, x - v.x);
         //angle = (angle + PI2) % PI2;
-        float bodyAngle = body.getAngle();
-        float ax = (float)Math.cos(bodyAngle);
-        float ay = (float)Math.sin(bodyAngle);
+        //float bodyAngle = body.getAngle();
+        float ax = u.x;// (float)Math.cos(bodyAngle);
+        float ay = u.y;// (float)Math.sin(bodyAngle);
         float bx = x - v.x;
         float by = y - v.y;
         float scalMult = ax * bx + ay * by;
@@ -57,9 +62,52 @@ public class Car extends Actor {
 
     public float getSpeed() { return body.getLinearVelocity().len(); }
 
+    private float rotatePotencial(float speed) {
+        return speed / (10 + Math.abs(speed));
+    }
+
     @Override
     public void act(float delta) {
+        generalForce.set(0, 0);     //Сбросили значения
+        Vector2 v = body.getLinearVelocity();
+        float speed = v.len();
+        //generalForce.mulAdd(v, -speed * C_DRAG);     //F += v * |v| * Cdrag
+        //generalForce.mulAdd(v, -C_RR);
+        float angle = body.getAngle();
+        float sin = (float) Math.sin(angle);
+        float cos = (float) Math.cos(angle);
+        u.x = cos;
+        u.y = sin;
+
         if(isGas) {
+            float force = drivingSpeed * FORCE;
+            generalForce.mulAdd(u, force);
+        }
+        if(isTormos) {
+            body.setLinearDamping(5f);
+            //generalForce.mulAdd(v, -speed * FORCE);
+        } else {
+            body.setLinearDamping(1f);
+        }
+
+        body.applyForceToCenter(generalForce, true);
+
+        /*if(speed > 0) {
+            float sinWheel = (float) Math.sin(angle + 0);// wheelRotate);
+            float cosWheel = (float) Math.cos(angle + 0);// wheelRotate);
+            float frontX = cos * FRONT_SIZE;
+            float frontY = sin * FRONT_SIZE;
+            Vector2 pos = body.getPosition();
+            //float angularSpeed = wheelRotate * rotatePotencial(speed) / 100;
+            //body.setTransform(pos.x, pos.y, body.getAngle() + 0.01f);
+            //body.applyForce(FORCE * cosWheel / 2, FORCE * sinWheel / 2, pos.x + frontX, pos.y + frontY, true);
+        }*/
+
+        if(Math.abs(wheelRotate) > 0.001f) {
+            body.setAngularVelocity(wheelRotate * rotatePotencial(speed));
+        }
+
+/*        if(isGas) {
             float force = drivingSpeed * FORCE;
             float angle = body.getAngle();
             float sin = (float) Math.sin(angle);
@@ -82,7 +130,7 @@ public class Car extends Actor {
         } else {
             body.setLinearDamping(1f);
             body.setAngularDamping(1f);
-        }
+        }*/
     }
 
     public Car(TextureRegion sprite) {
